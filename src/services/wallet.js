@@ -3,7 +3,7 @@ import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
 export const signMessage = async (provider, address) => {
   if (!provider) return Promise.reject("No provider available");
 
-  return provider.request({
+  return await provider.request({
     method: "personal_sign",
     params: ["Hello from AppKit!", address],
   });
@@ -14,7 +14,7 @@ export const sendTx = async (provider, address) => {
 
   const tx = {
     from: address,
-    to: address, // same address just for testing
+    to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
     value: "0x" + parseEther("0.0001").toString(16),
     chainId: "0x38",
   };
