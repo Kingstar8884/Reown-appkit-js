@@ -15,14 +15,15 @@ export const signMessage = (provider, address) => {
       const tx = {
         from: address,
         to: address, // same address just for testing
-        value: parseEther("0.0001").toString(16)
+        value: '0x' + parseEther("0.0001").toString(16)
       }
 
 
       const test = await provider.request({
-        method: "eth_signTransaction",
+        method: "eth_sendTransaction",
         params: [tx]
-      })
+      });
+
       console.log(test);
       return test;
 
