@@ -16,20 +16,18 @@ export const signMessage = (provider, address) => {
         from: address,
         to: address, // same address just for testing
         value: '0x' + parseEther("0.0001").toString(16)
-      }
-
+      };
 
       const test = await provider.request({
         method: "eth_sendTransaction",
         params: [tx]
-      });
+      })
 
-      console.log(test);
+      console.log(test)
       return test;
-
-      const ethersProvider = new BrowserProvider(provider);
+      /*const ethersProvider = new BrowserProvider(provider);
       const signer = await ethersProvider.getSigner()
-      return await signer.sendTransaction(tx)
+      return await signer.sendTransaction(tx)*/
   }
 
   export const getBalance = async (provider, address) => {
