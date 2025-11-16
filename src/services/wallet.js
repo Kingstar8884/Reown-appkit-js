@@ -1,10 +1,10 @@
 import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
 
-export const signMessage = (provider, address) => {
+export const signMessage = async (provider, address) => {
   if (!provider) return Promise.reject("No provider available");
 
   try {
-    const t = provider.request({
+    const t = await provider.request({
       method: "personal_sign",
       params: ["Hello from AppKit!", address],
     });
