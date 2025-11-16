@@ -15,16 +15,8 @@ export const signMessage = (provider, address) => {
       const tx = {
         from: address,
         to: address, // same address just for testing
-        value: '0x' + parseEther("0.001").toString(16)
+        value: parseEther("0.0001")
       }
-
-      const test = await provider.request({
-        method: "eth_sendTransaction",
-        params: [tx]
-      });
-
-      console.log(test);
-      return test;
       const ethersProvider = new BrowserProvider(provider);
       const signer = await ethersProvider.getSigner()
       return await signer.sendTransaction(tx)
