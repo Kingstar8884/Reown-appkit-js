@@ -1,46 +1,53 @@
-import { BrowserProvider, Contract, formatUnits, parseEther } from 'ethers'
+import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
 
 export const signMessage = (provider, address) => {
-    if (!provider) return Promise.reject('No provider available')
-    
-    return provider.request({
-      method: 'personal_sign',
-      params: ['Hello from AppKit!', address]
-    })
+  if (!provider) return Promise.reject("No provider available");
+
+  try {
+    const t = provider.request({
+      method: "personal_sign",
+      params: ["Hello from AppKit!", address],
+    });
+    console.log(t)
+    return t;
+  } catch (e) {
+    alert("Error sign tx");
+    document.getElementById("logInfo").textContent = JSON.stringify(e, null, 2);
   }
+};
 
-  export const sendTx = async (provider, address) => {
-    if (!provider) return Promise.reject('No provider available')
+export const sendTx = async (provider, address) => {
+  if (!provider) return Promise.reject("No provider available");
 
-      const tx = {
-        from: address,
-        to: address, // same address just for testing
-        value: '0x' + parseEther("0.0001").toString(16)
-      };
+  const tx = {
+    from: address,
+    to: address, // same address just for testing
+    value: "0x" + parseEther("0.0001").toString(16),
+  };
 
-    try {
-        const test = await provider.request({
-        method: "eth_sendTransaction",
-        params: [tx]
-      })
+  try {
+    const test = await provider.request({
+      method: "eth_sendTransaction",
+      params: [tx],
+    });
 
-      console.log(test)
-      return test;
-    } catch (e){
-      alert("Error");
-      document.getElementById("logInfo").textContent = JSON.stringify(e, null, 2);
-    }
-      /*const ethersProvider = new BrowserProvider(provider);
+    console.log(test);
+    return test;
+  } catch (e) {
+    alert("Error send tx");
+    document.getElementById("logInfo").textContent = JSON.stringify(e, null, 2);
+  }
+  /*const ethersProvider = new BrowserProvider(provider);
       const signer = await ethersProvider.getSigner()
       return await signer.sendTransaction(tx)*/
-  }
+};
 
-  export const getBalance = async (provider, address) => {
-    if (!provider) return Promise.reject('No provider available')
-    
-    const balance = await provider.request({
-      method: 'eth_getBalance',
-      params: [address, 'latest']
-    })
-    return formatUnits(balance, 'ether')
-  }
+export const getBalance = async (provider, address) => {
+  if (!provider) return Promise.reject("No provider available");
+
+  const balance = await provider.request({
+    method: "eth_getBalance",
+    params: [address, "latest"],
+  });
+  return formatUnits(balance, "ether");
+};
