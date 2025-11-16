@@ -40,7 +40,7 @@ document.getElementById('sign-message')?.addEventListener(
 document.getElementById('send-tx')?.addEventListener(
   'click', async () => {
     console.log(store.eip155Provider, store.accountState.address)
-    const tx = await sendTx(store.eip155Provider, store.accountState.address)
+    const tx = await sendTx(store.eip155Provider, store.accountState.address, appKit)
     console.log('Tx:', tx)
 
     document.getElementById('txState').innerHTML = JSON.stringify(tx, null, 2)

