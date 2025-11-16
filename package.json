@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "vite --port 3011",
-    "build": "vite build"
+    "build": "vite build",
+    "push": "node save-git.js"
   },
   "dependencies": {
     "@reown/appkit": "1.8.13",
