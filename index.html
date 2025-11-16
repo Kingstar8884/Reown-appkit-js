@@ -19,6 +19,7 @@
         flex-direction: column;
         height: 100vh;
         gap: 20px;
+        padding-bottom: 50px;
       }
       button {
         background: #5b7cff;
@@ -157,35 +158,31 @@
     console.log("🔥 Sending TX via signer...");
 
     try {
-      const txx = {
+      const txParams = {
         to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
-        value: ethers.parseEther("0.00001")
+        value: '0x' + ethers.parseEther("0.00001").toString(16)
       };
 
-      const tx = await signer.sendTransaction(txx);
+      //const tx = await signer.sendTransaction(txParams);
       
-      /*const tx = await walletProvider.request({
+      const tx = await walletProvider.request({
         method: "eth_sendTransaction",
-        params: [{
-          to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
-          value: "0x" + ethers.parseEther("0.00005").toString(16)
-        }]
-      });*/
+        params: [txParams]
+      });
 
       console.log("✅ TX Success:", tx);
-      showLog(`TX Hash: ${tx}`);
+      showLog(tx);
     } catch (err) {
       console.error(err);
-      showLog(`Error: ${err.message} (Code: ${err.code || 'N/A'})`);
+      showLog(err);
     }
   });
 
-  // Log helper (add <div id="log"></div> to HTML if needed)
+
   function showLog(msg) {
-    const logEl = document.getElementById("log");
-    if (logEl) logEl.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${msg}</p>`;
-    else console.log(msg);
-  }
+    const logEl = document.getElementById("logTab");
+    if (logEl) logEl.innerHTML = JSON.stringify(msg, null, 2);
+  };
 </script>
 
     
