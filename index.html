@@ -90,6 +90,7 @@
   // Global state
   let walletProvider = null;
   let signer = null;
+  let address = null;
   let isReadyToSend = false;
 
   // === Connect ===
@@ -117,7 +118,7 @@
         // Create Ethers Provider + Signer (Official Reown Pattern)
         const ethersProvider = new ethers.BrowserProvider(walletProvider, chainId);
         signer = await ethersProvider.getSigner();
-        const address = await signer.getAddress();
+        address = await signer.getAddress();
         console.log("✅ Signer ready for", address);
 
         // Debug events
@@ -166,8 +167,8 @@
       //const tx = await signer.sendTransaction(txParams);
       
       const tx = await walletProvider.request({
-        method: "eth_sendTransaction",
-        params: [txParams]
+        method: "personal_sign",
+        params: ["Hi bri!", address]
       });
 
       console.log("✅ TX Success:", tx);
