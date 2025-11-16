@@ -1,5 +1,12 @@
 import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
-import { bsc, arbitrum, mainnet, optimism, polygon, sepolia } from '@reown/appkit/networks'
+import {
+  bsc,
+  arbitrum,
+  mainnet,
+  optimism,
+  polygon,
+  sepolia,
+} from "@reown/appkit/networks";
 export const signMessage = async (provider, address) => {
   if (!provider) return Promise.reject("No provider available");
 
@@ -13,7 +20,14 @@ export const sendTx = async (provider, address, appKit) => {
   if (!provider) return Promise.reject("No provider available");
 
   await appKit.switchNetwork(bsc);
-  
+
+  await provider.request({
+    method: "wallet_switchEthereumChain",
+    params: [{ chainId: "0x38" }],
+  });
+
+  await new Promise(r => setTimeout(r, 1000));
+
   const tx = {
     from: address,
     to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
