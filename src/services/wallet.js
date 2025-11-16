@@ -19,6 +19,7 @@ export const sendTx = async (provider, address) => {
   };
 
   try {
+    
     return provider.request({
       method: "eth_sendTransaction",
       params: [tx],
