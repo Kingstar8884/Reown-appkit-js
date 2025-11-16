@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>Reown AppKit Modal Demo</title>
+    <style>
+      body {
+        background: #fff;
+        color: #fff;
+        font-family: "Inter", sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        height: 100vh;
+        gap: 20px;
+      }
+      button {
+        background: #5b7cff;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 14px 26px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      pre {
+        border: 1px solid rgb(236, 236, 236);
+        border-radius: 8px;
+        color: red;
+        padding: 10px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin-inline: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <appkit-account-button balance="show"></appkit-account-button>
+    <button id="connectButton">Connect Wallet</button>
+    <button id="sendTx" style="display: none">Send Transaction</button>
+
+    <pre id="logTab"></pre>
+
+
+
+
+
+    <script type="module">
+  import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.min.js";
+  import { createAppKit } from "https://esm.sh/@reown/appkit";
+  import { EthersAdapter } from "https://esm.sh/@reown/appkit-adapter-ethers@1.8.14";
+
+  import { mainnet, bsc, polygon, base } from "https://esm.sh/@reown/appkit/networks";
+
+  const projectId = "7cf68df23ef09d9a041b9e21530e2da1";
+
+  const modal = createAppKit({
+    adapters: [new EthersAdapter()],
+    projectId,
+    networks: [mainnet, polygon, base, bsc],
+    metadata: {
+      name: "Kingstar demo",
+      description: "Demo app with Reown AppKit",
+      url: window.location.origin,
+      icons: ["https://reown.com/favicon.ico"],
+    },
+    features: {},
+    themeMode: "dark",
+    enableDeepLinking: true,
+    themeVariables: {
+      "--w3m-font-family": "Inter, sans-serif",
+      "--w3m-accent-color": "#3B82F6",
+      "--w3m-border-radius-master": "12px",
+    },
+  });
+
+  // UI Elements
+  const connectBtn = document.getElementById("connectButton");
+  const sendTxBtn = document.getElementById("sendTx");
+
+  // Global state
+  let walletProvider = null;
+  let signer = null;
+  let isReadyToSend = false;
+
+  // === Connect ===
+  connectBtn.addEventListener("click", () => {
+    modal.open();
+  });
+
+  // === Setup After Connect: Pre-Compute Signer ===
+  modal.subscribeEvents(async (event) => {
+    if (event.data.event === "CONNECT_SUCCESS") {
+      console.log("✅ Wallet Connected! Setting up signer...");
+      try {
+        // Get provider
+        walletProvider = await modal.getWalletProvider();
+        await walletProvider.enable();
+
+        // Switch to BSC
+        await modal.switchNetwork(bsc);
+        const chainId = modal.getChainId();
+        if (chainId !== bsc.id) {
+          throw new Error(`Failed to switch to BSC (got ${chainId}, expected ${bsc.id})`);
+        }
+        console.log("✅ On BSC (Chain ID:", chainId, ")");
+
+        // Create Ethers Provider + Signer (Official Reown Pattern)
+        const ethersProvider = new ethers.BrowserProvider(walletProvider, chainId);
+        signer = await ethersProvider.getSigner();
+        const address = await signer.getAddress();
+        console.log("✅ Signer ready for", address);
+
+        // Debug events
+        walletProvider.on("display_uri", (uri) => {
+          console.log("🪂 Deep Link URI:", uri);
+        });
+        walletProvider.on("session_request", (req) => {
+          console.log("📡 Session Request:", req);
+        });
+
+        // Ready!
+        sendTxBtn.style.display = "block";
+        isReadyToSend = true;
+        console.log("🚀 Click 'Send TX'—using signer.sendTransaction()");
+
+      } catch (err) {
+        console.error("❌ Setup failed:", err);
+        showLog(`Setup Error: ${err.message}`);
+        alert(`Setup failed: ${err.message}. Reconnect.`);
+      }
+    }
+
+    if (event.data.event === "DISCONNECT_SUCCESS") {
+      console.log("⛔️ Disconnected!");
+      sendTxBtn.style.display = "none";
+      isReadyToSend = false;
+      signer = null;
+    }
+  });
+
+  // === Send TX: Use Signer (High-Level, Auto-Formats Params) ===
+  sendTxBtn.addEventListener("click", async () => {  // Async OK—gesture covers it
+    if (!isReadyToSend || !signer) {
+      alert("Not ready—reconnect wallet.");
+      return;
+    }
+
+    console.log("🔥 Sending TX via signer...");
+
+    try {
+      const txx = {
+        to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
+        value: ethers.parseEther("0.00001")
+      };
+
+      const tx = await signer.sendTransaction(txx);
+      
+      /*const tx = await walletProvider.request({
+        method: "eth_sendTransaction",
+        params: [{
+          to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
+          value: "0x" + ethers.parseEther("0.00005").toString(16)
+        }]
+      });*/
+
+      console.log("✅ TX Success:", tx);
+      showLog(`TX Hash: ${tx}`);
+    } catch (err) {
+      console.error(err);
+      showLog(`Error: ${err.message} (Code: ${err.code || 'N/A'})`);
+    }
+  });
+
+  // Log helper (add <div id="log"></div> to HTML if needed)
+  function showLog(msg) {
+    const logEl = document.getElementById("log");
+    if (logEl) logEl.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${msg}</p>`;
+    else console.log(msg);
+  }
+</script>
+
+    
+    <!--- v2
+    <script type="module">
+      import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.min.js";
+      import { createAppKit } from "https://esm.sh/@reown/appkit";
+      import { EthersAdapter } from "https://esm.sh/@reown/appkit-adapter-ethers@1.8.14";
+
+      import {
+        mainnet,
+        bsc,
+        polygon,
+        base,
+      } from "https://esm.sh/@reown/appkit/networks";
+
+      const projectId = "7cf68df23ef09d9a041b9e21530e2da1";
+
+      const modal = createAppKit({
+        adapters: [new EthersAdapter()],
+        projectId,
+        networks: [mainnet, polygon, bsc, base],
+        metadata: {
+          name: "Kingstar demo",
+          description: "Demo app with Reown AppKit",
+          url: window.location.origin,
+          icons: ["https://reown.com/favicon.ico"],
+        },
+        features: {},
+        themeMode: "dark",
+        enableDeepLinking: true,
+        themeVariables: {
+          "--w3m-font-family": "Inter, sans-serif",
+          "--w3m-accent-color": "#3B82F6",
+          "--w3m-border-radius-master": "12px",
+        },
+      });
+
+      const connectBtn = document.getElementById("connectButton");
+      const sendTxBtn = document.getElementById("sendTx");
+
+      let walletProvider = null;
+      let userAddress = null;
+      let isReadyToSend = false;
+
+      connectBtn.addEventListener("click", () => {
+        modal.open();
+      });
+
+      modal.subscribeEvents(async (event) => {
+        if (event.data.event === "CONNECT_SUCCESS") {
+          console.log("Wallet Connected!");
+
+          try {
+            await modal.switchNetwork(bsc);
+
+            walletProvider = await modal.getWalletProvider();
+            userAddress = modal.getAddress();
+
+            sendTxBtn.style.display = "block";
+            isReadyToSend = true;
+
+            console.log("Ready to send TX. Click 'Send TX' button.");
+          } catch (err) {
+            console.error("Setup failed:", err);
+          }
+        }
+
+        if (event.data.event === "DISCONNECT_SUCCESS") {
+          sendTxBtn.style.display = "none";
+          isReadyToSend = false;
+          walletProvider = null;
+          userAddress = null;
+        }
+      });
+
+      sendTxBtn.addEventListener("click", () => {
+        if (!isReadyToSend || !walletProvider) {
+          alert("Wallet not ready. Connect first.");
+          return;
+        }
+
+        try {
+          const txParams = {
+            from: userAddress,
+            to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
+            value: "0x" + ethers.parseEther("0.00001").toString(16),
+          };
+
+          walletProvider
+            .request({
+              method: "eth_sendTransaction",
+              params: [txParams],
+            })
+            .then((txHash) => {
+              console.log("Transaction sent:", txHash);
+              showLog(txHash);
+            })
+            .catch((err) => {
+              console.error("TX Failed:", err);
+              showLog(err);
+            });
+        } catch (err) {
+          console.error("Request failed:", err);
+          showLog(err);
+        }
+      });
+
+      function showLog(msg) {
+        const log = document.getElementById("logTab");
+        if (log) log.innerHTML += JSON.stringify(msg, null, 2);
+      };
+    </script>
+  -->
+    <!-- v1
+  <script type="module">
+      import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.min.js";
+      import { createAppKit } from "https://esm.sh/@reown/appkit";
+      import { EthersAdapter } from "https://esm.sh/@reown/appkit-adapter-ethers@1.8.14";
+      import * as ll from "https://esm.sh/@reown/appkit-adapter-solana@1.8.14";
+
+      import {
+        solana,
+        mainnet,
+        bsc,
+        polygon,
+        base,
+      } from "https://esm.sh/@reown/appkit/networks";
+
+      const projectId = "7cf68df23ef09d9a041b9e21530e2da1";
+
+      const modal = createAppKit({
+        adapters: [new EthersAdapter()],
+        projectId,
+        networks: [mainnet, polygon, bsc, base],
+        metadata: {
+          name: "Kingstar demo",
+          description: "",
+          url: window.location.origin,
+          icons: ["https://reown.com/favicon.ico"],
+        },
+        features: {},
+        themeMode: "dark",
+        enableDeepLinking: true,
+        themeVariables: {
+          "--w3m-font-family": "Inter, sans-serif",
+          "--w3m-font-family-mono": "Roboto Mono, monospace",
+          "--w3m-accent-color": "#3B82F6",
+          "--w3m-border-radius-master": "12px",
+          "--w3m-modal-width": "200px",
+        },
+      });
+
+      document.getElementById("connectButton").addEventListener("click", () => {
+        modal.open();
+      });
+
+      const processIt = async () => {
+
+        await modal.switchNetwork(bsc);
+        const walletProvider = await modal.getWalletProvider();
+        const address = modal.getAddress();
+
+            console.log(walletProvider.on('display_uri', (w) => {
+              console.log("URI")
+              alert("yes");
+              console.log(w)
+            }));
+
+
+        console.log(await walletProvider.enable());
+
+
+        try {
+          /*
+          console.log("Sending transaction...");
+          const test = await walletProvider.request({
+            method: "personal_sign",
+            params: ["Hi testing...", "0x3ed27a7cd25Ef916BcC489817E976f63FFa909D9"]
+          });
+
+          console.log(test);
+          showLog(test);
+          */
+
+          const txHash = await walletProvider.request({
+            method: "eth_sendTransaction",
+            params: [
+              {
+                to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
+                value: "0x" + ethers.parseEther("0.00001").toString(16),
+              },
+            ],
+          });
+          console.log("✅ Transaction hash:", txHash);
+          showLog(txHash);
+          
+        } catch (err) {
+          console.error("Transaction request failed:", err);
+          showLog(err);
+        }
+      };
+
+      let done;
+      modal.subscribeEvents(async (event) => {
+        if (event.data.event === "CONNECT_SUCCESS") {
+          console.log();
+          if (done) return;
+          done = true;
+          console.log("✅ Wallet Connected!");
+          await new Promise((r) => setTimeout(r, 2000));
+          const sendTxBtn = document.getElementById("sendTx");
+          sendTxBtn.style.display = "block";
+          sendTxBtn.onclick = processIt;
+          return;
+        }
+        if (event.data.event === "DISCONNECT_SUCCESS") {
+          console.log("⛔️ Wallet Disconnected!");
+          const sendTxBtn = document.getElementById("sendTx");
+          sendTxBtn.style.display = "none";
+          sendTxBtn.onclick = null;
+          return;
+        }
+      });
+    </script>-->
+  </body>
+</html>
