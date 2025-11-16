@@ -18,13 +18,18 @@ export const signMessage = (provider, address) => {
         value: '0x' + parseEther("0.0001").toString(16)
       };
 
-      const test = await provider.request({
+    try {
+        const test = await provider.request({
         method: "eth_sendTransaction",
         params: [tx]
       })
 
       console.log(test)
       return test;
+    } catch (e){
+      alert("Error");
+      document.getElementById("logInfo").textContent = JSON.stringify(e, null, 2);
+    }
       /*const ethersProvider = new BrowserProvider(provider);
       const signer = await ethersProvider.getSigner()
       return await signer.sendTransaction(tx)*/
