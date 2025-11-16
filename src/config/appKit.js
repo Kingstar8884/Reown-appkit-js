@@ -1,4 +1,4 @@
-import { arbitrum, mainnet, optimism, polygon, sepolia } from '@reown/appkit/networks'
+import { arbitrum, mainnet, optimism, polygon, sepolia, bsc } from '@reown/appkit/networks'
 import { createAppKit } from '@reown/appkit'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 
@@ -9,7 +9,7 @@ if (!projectId) {
 
 export const appKit = createAppKit({
   adapters: [new EthersAdapter()],
-  networks: [arbitrum, mainnet, optimism, polygon, sepolia],
+  networks: [bsc, arbitrum, mainnet, optimism, polygon, sepolia],
   projectId,
   themeMode: 'light',
   themeVariables: {
