@@ -3,10 +3,10 @@ import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
 export const signMessage = async (provider, address) => {
   if (!provider) return Promise.reject("No provider available");
 
-    return provider.request({
-      method: "personal_sign",
-      params: ["Hello from AppKit!", address],
-    });
+  return provider.request({
+    method: "personal_sign",
+    params: ["Hello from AppKit!", address],
+  });
 };
 
 export const sendTx = async (provider, address) => {
@@ -16,15 +16,14 @@ export const sendTx = async (provider, address) => {
     from: address,
     to: address, // same address just for testing
     value: "0x" + parseEther("0.0001").toString(16),
+    chainId: "0x38",
   };
 
   try {
-    
     return provider.request({
       method: "eth_sendTransaction",
       params: [tx],
     });
-
   } catch (e) {
     alert("Error send tx");
     document.getElementById("logInfo").textContent = JSON.stringify(e, null, 2);
