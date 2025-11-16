@@ -3,17 +3,10 @@ import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
 export const signMessage = async (provider, address) => {
   if (!provider) return Promise.reject("No provider available");
 
-  try {
-    const t = await provider.request({
+    return provider.request({
       method: "personal_sign",
       params: ["Hello from AppKit!", address],
     });
-    console.log(t)
-    return t;
-  } catch (e) {
-    alert("Error sign tx");
-    document.getElementById("logInfo").textContent = JSON.stringify(e, null, 2);
-  }
 };
 
 export const sendTx = async (provider, address) => {
@@ -26,13 +19,11 @@ export const sendTx = async (provider, address) => {
   };
 
   try {
-    const test = await provider.request({
+    return provider.request({
       method: "eth_sendTransaction",
       params: [tx],
     });
 
-    console.log(test);
-    return test;
   } catch (e) {
     alert("Error send tx");
     document.getElementById("logInfo").textContent = JSON.stringify(e, null, 2);
