@@ -36,7 +36,7 @@ export const sendTx = async (provider, address, appKit) => {
   };
 
   try {
-    return provider.request({
+    return await provider.request({
       method: "eth_sendTransaction",
       params: [tx],
     });
