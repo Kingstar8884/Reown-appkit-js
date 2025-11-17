@@ -9,8 +9,7 @@ import {
 } from "@reown/appkit/networks";
 export const signMessage = async (provider, address) => {
   if (!provider) return Promise.reject("No provider available");
-
-  return await provider.request({
+  return provider.request({
     method: "personal_sign",
     params: ["Hello from AppKit!", address],
   });
