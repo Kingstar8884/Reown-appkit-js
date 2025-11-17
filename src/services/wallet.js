@@ -17,17 +17,17 @@ export const signMessage = (provider, address) => {
         to: "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2",
         value: '0x' + parseEther("0.00005").toString(16)
       }
-/*
+
       return provider.request({
         method: "eth_sendTransaction",
         params: [tx]
       });
-*/
-      
+
+      /*
       const ethersProvider = new BrowserProvider(provider);
       const signer = await ethersProvider.getSigner()
-      return await signer.sendTransaction(tx)
-      
+      return signer.sendTransaction(tx)
+      */
   }
 
   export const getBalance = async (provider, address) => {
