@@ -1,6 +1,6 @@
 import { store, updateStore } from '../store/appkitStore'
 import { updateStateDisplay, updateTheme, updateButtonVisibility } from './dom'
-import { polygon, mainnet } from '@reown/appkit/networks'
+import { bsc, mainnet } from '@reown/appkit/networks'
 
 export const initializeSubscribers = (modal) => {
   modal.subscribeProviders(state => {
@@ -19,7 +19,7 @@ export const initializeSubscribers = (modal) => {
     const switchNetworkBtn = document.getElementById('switch-network')
     if (switchNetworkBtn) {
       switchNetworkBtn.textContent = `Switch to ${
-        state?.chainId === polygon.id ? 'Mainnet' : 'Polygon'
+        state?.chainId === bsc.id ? 'Mainnet' : 'Bsc'
       }`
     }
   })

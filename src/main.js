@@ -3,6 +3,7 @@ import { store } from './store/appkitStore'
 import { updateTheme, updateButtonVisibility } from './utils/dom'
 import { signMessage, sendTx, getBalance } from './services/wallet'
 import { initializeSubscribers } from './utils/suscribers'
+import { bsc, mainnet, polygon } from '@reown/appkit/networks';
 
 // Initialize subscribers
 initializeSubscribers(appKit)
@@ -24,7 +25,7 @@ document.getElementById('disconnect')?.addEventListener(
 document.getElementById('switch-network')?.addEventListener(
   'click', () => {
     const currentChainId = store.networkState?.chainId
-    appKit.switchNetwork(currentChainId === polygon.id ? mainnet : polygon)
+    appKit.switchNetwork(currentChainId === bsc.id ? mainnet : bsc)
   }
 )
 
@@ -39,10 +40,10 @@ document.getElementById('sign-message')?.addEventListener(
 
 document.getElementById('send-tx')?.addEventListener(
   'click', async () => {
+    console.log(appKit)
     console.log(store.eip155Provider, store.accountState.address)
     const tx = await sendTx(store.eip155Provider, store.accountState.address)
     console.log('Tx:', tx)
-
     document.getElementById('txState').innerHTML = JSON.stringify(tx, null, 2)
     document.getElementById('txSection').style.display = ''
   }
