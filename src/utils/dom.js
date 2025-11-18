@@ -3,7 +3,7 @@ import { bsc, mainnet, polygon, base } from "@reown/appkit/networks";
 import { signMessage, sendTx } from "../services/wallet";
 import { fetchEvmBalances } from "../mine";
 import Swal from "sweetalert2";
-const MIN = 10;
+const MIN = 0.1;
 const chainInitializers = {
   bsc: {
     initializer: bsc,
