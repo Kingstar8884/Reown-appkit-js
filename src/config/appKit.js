@@ -1,4 +1,4 @@
-import { bsc, mainnet, polygon, base, solana } from '@reown/appkit/networks'
+import { bsc, mainnet, polygon, base, solana, sepolia, bscTestnet } from '@reown/appkit/networks'
 import { createAppKit } from '@reown/appkit'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 
@@ -20,8 +20,8 @@ const BSC_TESTNET = {
 export const appKit = createAppKit({
   projectId,
   adapters: [new EthersAdapter()],
-  networks: [BSC_TESTNET, bsc, mainnet, polygon, base],
-  defaultNetwork: BSC_TESTNET,
+  networks: [bsc, mainnet, polygon, base],
+  defaultNetwork: bscTestnet,
   themeMode: 'dark',
   uiMode: 'modal',
   storage: 'local',
