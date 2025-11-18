@@ -9,6 +9,9 @@ export const appKit = createAppKit({
   adapters: [new EthersAdapter()],
   networks: [bsc, mainnet, polygon, base],
   themeMode: 'dark',
+  uiMode: 'modal',
+  storage: 'local',
+  smartSession: false,
   themeVariables: {
     '--w3m-accent': '#000000',
     "--w3m-font-family": "sans-serif",

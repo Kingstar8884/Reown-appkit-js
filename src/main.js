@@ -14,7 +14,7 @@ initializeSubscribers(appKit);
 
 // Initial check
 updateButtonVisibility(appKit.getIsConnectedState());
-updateBtnText(appKit.getIsConnectedState());
+updateBtnText(appKit, appKit.getIsConnectedState());
 
 // Button event listeners
 /*document.getElementById('open-connect-modal')?.addEventListener(
