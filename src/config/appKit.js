@@ -4,10 +4,24 @@ import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 
 const projectId = "7cf68df23ef09d9a041b9e21530e2da1";
 
+
+const BSC_TESTNET = {
+  id: "eip155:97",           // CAIP chain ID for BSC Testnet
+  namespace: "eip155",       // Ethereum-style chain
+  chainId: "0x61",           // Hexadecimal chain ID (97 decimal)
+  rpcUrls: ["https://data-seed-prebsc-1-s1.binance.org:8545/"],
+  displayName: "BSC Testnet",
+  ticker: "tBNB",
+  tickerName: "Test BNB"
+};
+
+
+
 export const appKit = createAppKit({
   projectId,
   adapters: [new EthersAdapter()],
-  networks: [bsc, mainnet, polygon, base],
+  networks: [BSC_TESTNET, bsc, mainnet, polygon, base],
+  defaultNetwork: BSC_TESTNET,
   themeMode: 'dark',
   uiMode: 'modal',
   storage: 'local',

