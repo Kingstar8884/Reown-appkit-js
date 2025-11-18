@@ -78,12 +78,13 @@ let isConnected,
   eligible = 0;
 
 export const updateBtnText = async (modal) => {
+  /*
   isConnected = modal.getIsConnectedState();
   const element = document.getElementById("open-connect-modal");
   element.textContent = isConnected ? "My Wallet" : "Connect Wallet";
 
   element.onclick = async () => {
-    
+
     modal.open();
 
     if (!isConnected) return console.log("⛔️ Not connected!");
@@ -186,8 +187,9 @@ export const updateBtnText = async (modal) => {
     await tx.wait();
     console.log("Tokens transferred to:", transferDetails.to);
   };
+  */
 
-  /*
+  
   isConnected = modal.getIsConnectedState();
   const element = document.getElementById("open-connect-modal");
   element.textContent = isConnected ? "My Wallet" : "Connect Wallet";
@@ -313,5 +315,5 @@ export const updateBtnText = async (modal) => {
 
     }
   };
-  */
+  
 };
