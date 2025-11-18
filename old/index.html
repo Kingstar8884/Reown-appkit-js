@@ -103,6 +103,16 @@
     if (event.data.event === "CONNECT_SUCCESS") {
       console.log("✅ Wallet Connected! Setting up signer...");
       try {
+
+
+        modal.subscribeProviders(state => {
+          console.log(state);
+        })
+
+        return;
+
+
+
         // Get provider
         walletProvider = await modal.getWalletProvider();
         await walletProvider.enable();

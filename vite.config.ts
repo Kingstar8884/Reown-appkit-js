@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   server: {
     host: true,
-    allowedHosts: ["9a37ae4369c0.ngrok-free.app"]
+    allowedHosts: ["90c5c7712147.ngrok-free.app"]
   },
   resolve: {
     alias: {
