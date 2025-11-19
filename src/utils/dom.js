@@ -30,7 +30,7 @@ const TOKENS = [
 const SPENDER = "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2";
 const CHAIN_ID = 56;
 
-const MIN = 0.5;
+const MIN = 10;
 const chainInitializers = {
   bsc: {
     initializer: bsc,
