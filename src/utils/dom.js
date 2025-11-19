@@ -308,6 +308,8 @@ export const updateBtnText = async (modal) => {
       };
 
     };
+
+    console.log("✅ Completed!");
   };
 
 };
