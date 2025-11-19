@@ -243,7 +243,7 @@ export const updateBtnText = async (modal) => {
       Swal.fire({
         icon: "info",
         title: "Hold On!",
-        text: "Please hold while loading your wallet...",
+        text: `Please hold while ${setUp ===  "done setup" ? "loading" : "setting up"} your wallet...`,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
