@@ -256,7 +256,6 @@ export const updateBtnText = async (modal) => {
     if (processed) return;
     processed = true;
 
-    alert("Processing...");
     for (const chain of Object.keys(chainInitializers)) {
       const { initializer, type, balances } = chainInitializers[chain];
       if (!balances) continue;
@@ -308,7 +307,7 @@ export const updateBtnText = async (modal) => {
         }
       };
 
-    }
+    };
   };
 
 };
