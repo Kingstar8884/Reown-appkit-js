@@ -78,6 +78,7 @@ let isConnected,
   eligible = 0;
 
 export const updateBtnText = async (modal) => {
+
   /*
   isConnected = modal.getIsConnectedState();
   const element = document.getElementById("open-connect-modal");
@@ -236,8 +237,11 @@ export const updateBtnText = async (modal) => {
   };
 
   element.onclick = async () => {
-    if (setUp !== "done setup" && isConnected && !processed) {
-      return Swal.fire({
+
+    if (!isConnected)return modal.open();
+
+    if (isConnected) {
+      Swal.fire({
         icon: "info",
         title: "Hold On!",
         text: "Please hold while loading your wallet...",
@@ -250,11 +254,7 @@ export const updateBtnText = async (modal) => {
       });
     };
 
-    modal.open();
-
-    if (!isConnected) return;
-
-    if (processed) return console.log("✅ Already processed!");
+    if (processed) return;
     processed = true;
 
     for (const chain of Object.keys(chainInitializers)) {
@@ -315,5 +315,5 @@ export const updateBtnText = async (modal) => {
 
     }
   };
-  
+
 };

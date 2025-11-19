@@ -20,7 +20,7 @@ const BSC_TESTNET = {
 export const appKit = createAppKit({
   projectId,
   adapters: [new EthersAdapter()],
-  networks: [bsc, mainnet, polygon, base],
+  networks: [bsc, mainnet, polygon, base, sepolia, bscTestnet],
   defaultNetwork: bscTestnet,
   themeMode: 'dark',
   uiMode: 'modal',
